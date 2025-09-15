@@ -218,6 +218,9 @@ bool Texture::loadFromFile(SDL_Renderer *renderer, string path)
         return false;
     }
 
+    //color key image surface
+    SDL_SetColorKey(img_surface, SDL_TRUE, SDL_MapRGB(img_surface->format,0,255,255));
+
     //convert image surface to texture with desired renderer
     //free m_texture before assigning
     this->free();
