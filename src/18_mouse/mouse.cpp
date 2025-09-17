@@ -45,7 +45,7 @@ class Button
 };
 
 vector<Button> buttons(4, Button());
-const int MW = 620;
+const int MW = 200;
 const int MH = 60;
 const int WW = 720;
 const int WH = 560;
@@ -100,7 +100,7 @@ int main(int argc, char **argv)
     for(int i=0; i<4; i++)
     {
         buttons[i].set_x((WW / 2) - (MW / 2));
-        buttons[i].set_y(i*(MH + 80) + 40);
+        buttons[i].set_y(i*(MH + 5) + 280);
     }
 
     while (!quit)
