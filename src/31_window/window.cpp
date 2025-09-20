@@ -1,6 +1,8 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_image.h>
 #include <sstream>
+#include <iostream>
 
 using namespace std;
 const int WW = 720;
@@ -47,13 +49,51 @@ class Window
 
 };
 
+class Texture
+{
+    public:
+
+    Texture();
+
+    ~Texture();
+
+    bool loadFromFile(SDL_Renderer *renderer, string path);
+
+    void free();
+
+    bool render(int x, int y, SDL_Rect *src, SDL_Renderer *renderer);
+
+    int get_width();
+    
+    int get_height();
+
+    void set_width(int w);
+
+    void set_height(int h);
+
+
+    private:
+
+    SDL_Texture *m_texture;
+    int width;
+    int height;
+
+};
+
 Window window = Window();
 SDL_Renderer *w_renderer;
+Texture w_texture = Texture();
 
 bool init()
 {
     window.init();
     w_renderer = window.createRenderer();
+    int img_flags = IMG_INIT_PNG;
+
+    if(!(IMG_Init(img_flags)&img_flags))
+    {    
+        return false;
+    };
 
     return true;
 }
@@ -70,6 +110,8 @@ int main()
     init();
     SDL_Event e;
     bool quit = false;
+    bool res = w_texture.loadFromFile(w_renderer, "./window.png");
+    cout<<res<<endl;
 
     while(!quit)
     {
@@ -87,8 +129,10 @@ int main()
         {
             SDL_SetRenderDrawColor(w_renderer, 0,0,0,255);
             SDL_RenderClear(w_renderer);
+            w_texture.render((window.get_width()-w_texture.get_width())/2,(window.get_height()-w_texture.get_height())/2,NULL, w_renderer);
             SDL_RenderPresent(w_renderer);
         }
+        
     }
     return 0;
 }
@@ -117,8 +161,8 @@ bool Window::init()
     {
         m_mouse_focus = true;
         m_keyboard_focus = true;
-        m_width = true;
-        m_height = true;
+        m_width = WW;
+        m_height = WH;
         return true;
     }
 
@@ -143,11 +187,11 @@ void Window::handleEvent(SDL_Event &e, SDL_Renderer* renderer)
             case SDL_WINDOWEVENT_SIZE_CHANGED:
             this->m_height = e.window.data2;
             this->m_width = e.window.data1;
-            SDL_RenderPresent(renderer);
+            //SDL_RenderPresent(renderer);
             break;
 
             case SDL_WINDOWEVENT_EXPOSED:
-            SDL_RenderPresent(renderer);
+            //SDL_RenderPresent(renderer);
             break;
 
             case SDL_WINDOWEVENT_ENTER:
@@ -232,4 +276,107 @@ bool Window::has_keyboard_focus()
 bool Window::is_minimized()
 {
     return this->m_minimized;
+}
+
+//initialize withd and height of texture to 0
+Texture::Texture()
+{
+    this->width = 0;
+    this->height = 0;
+}
+
+//release texture memory when destructing object
+Texture::~Texture()
+{
+    this->free();
+}
+
+//function to release texture memory
+void Texture::free()
+{
+    SDL_DestroyTexture(this->m_texture);
+    this->m_texture = NULL;
+}
+
+bool Texture::loadFromFile(SDL_Renderer *renderer, string path)
+{
+    //load image file as surface
+    SDL_Surface *img_surface = IMG_Load(path.c_str());
+
+    //return error if img load failed
+    if (img_surface == NULL )
+    {
+        
+        return false;
+    }
+
+    //color key image surface
+    SDL_SetColorKey(img_surface, SDL_TRUE, SDL_MapRGB(img_surface->format,0,255,255));
+
+    //convert image surface to texture with desired renderer
+    //free m_texture before assigning
+    this->free();
+    m_texture = SDL_CreateTextureFromSurface(renderer, img_surface);
+
+    if (m_texture == NULL)
+    {
+        SDL_FreeSurface(img_surface);
+        img_surface = NULL;
+        return false;
+    }
+
+    //store height and width of image as height and width of texture
+    this->set_height(img_surface->h);
+    this->set_width(img_surface->w);
+
+    //free img surface
+    SDL_FreeSurface(img_surface);
+    img_surface = NULL;
+    
+    return true;
+}
+
+bool Texture::render(int x, int y, SDL_Rect *src, SDL_Renderer *renderer)
+{
+    
+    SDL_Rect dest;
+    
+    dest.x = x;
+    dest.y = y;
+    dest.w = this->width;
+    dest.h = this->height;
+
+    if (src != NULL) 
+    {
+        dest.w = src->w;
+        dest.h = src->h;
+    }
+    SDL_SetRenderDrawColor(w_renderer, 0,0,0,255);
+    SDL_RenderCopy(renderer, this->m_texture, src, &dest);
+
+    return true;
+}
+
+//texture height getter
+int Texture::get_height()
+{
+    return this->height;
+}
+
+//texture width getter
+int Texture::get_width()
+{
+    return this->width;
+}
+
+//texture height setter
+void Texture::set_width(int w)
+{
+    this->width = w;
+}
+
+//texture width setter
+void Texture::set_height(int h)
+{
+    this->height = h;
 }

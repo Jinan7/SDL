@@ -1,6 +1,6 @@
 OBJS = window.cpp
 COMPILER_FLAGS = -w
-LINKER_FLAGS = -lSDL2 -lSDL2_ttf
+LINKER_FLAGS = -lSDL2 -lSDL2_ttf -lSDL2_image
 CC = g++
 OBJ_NAME = window
 
